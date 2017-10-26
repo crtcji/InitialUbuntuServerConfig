@@ -273,7 +273,6 @@ blnk_echo;
 # Cloning OpenVPN installation script
 sctn_echo OPEVNPN SECTION
 cd ~ && git clone https://github.com/Angristan/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh;
-echo "Done" >> $rlog;
 
 ## MANUAL WORK
 # ========================================================================================================
@@ -298,4 +297,7 @@ sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\21440m/' $sshdc;
 sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
 service ssh restart
 
-# yes | ufw delete 1 && ufw reload
+sctn_echo UFW UPDATE;
+yes | ufw delete 1 && ufw reload
+
+echo "Done" >> $rlog;
