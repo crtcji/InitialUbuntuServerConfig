@@ -27,7 +27,7 @@ std_echo () {
 }
 
 blnk_echo () {
-	echo ""
+	echo "" >> $rlog;
 }
 
 # Echoes activation of a specific application option ($@)
@@ -122,6 +122,7 @@ for a in $appcli; do
 	inst $a;
 done
 
+blnk_echo;
 
 ## Unattended-Upgrades configuration section
 sctn_echo AUTOUPDATES "(Unattended-Upgrades)";
@@ -230,6 +231,8 @@ else
 	std_echo;
 fi
 
+blnk_echo;
+
 # END: Unattended-Upgrades configuration section
 
 
@@ -261,13 +264,15 @@ clamscan --recursive --no-summary --infected / 2>/dev/null | grep FOUND >> $rprt
 echo -e "Creating a \e[1m\e[34mcronjob\e[0m for the ClamAV ..." >> $rlog;
 echo -e '#!/bin/bash\n\n/usr/bin/freshclam --quiet;\n/usr/bin/clamscan --recursive --exclude-dir=/media/ --no-summary --infected / 2>/dev/null >> '$rprtfldr'/clamscan_daily_$(date +"%m-%d-%Y").txt;' >> /etc/cron.daily/clamscan.sh && chmod 755 /etc/cron.daily/clamscan.sh;
 
-blnk_echo >> $rlog;
+blnk_echo;
 
 # # END: ClamAV section: configuration and the first scan
 
 
 # Cloning OpenVPN installation script
+sctn_echo OPEVNPN SECTION
 cd ~ && git clone https://github.com/Angristan/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh;
+echo "Done";
 
 ## MANUAL WORK
 # ========================================================================================================
