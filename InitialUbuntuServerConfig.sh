@@ -27,7 +27,7 @@ std_echo () {
 	echo -e "\e[1m\e[31mThis step stops here.\e[0m";
 }
 
-blnk_echo () {
+blnk_echo() {
 	echo "" >> $rlog;
 }
 
@@ -67,18 +67,19 @@ chg_unat10 () {
 bckup () {
 	echo -e "Backing up: \e[1m\e[34m$@\e[0m ..." >> $rlog;
 	cp -r $@ $@_$(date +"%m-%d-%Y")."$bckp";
+	blnk_echo
 }
 
 # Updates/upgrades the system
 up () {
-  sctn_echo UPDATES;
+  sctn_echo UPDATES
   upvar="update upgrade dist-upgrade";
   for upup in $upvar; do
     echo -e "Executing \e[1m\e[34m$upup\e[0m" >> $rlog;
     #apt-get -yqq $upup > /dev/null 2>&1 >> $rlog;
     apt-get -yqq $upup >> $rlog;
   done
-  blnk_echo;
+  blnk_echo
 }
 
 # Installation
@@ -92,7 +93,7 @@ inst () {
 
 ## UFW
 # Backing up the file
-sctn_echo FIREWALL "(UFW)";
+sctn_echo FIREWALL "(UFW)"
 bckup /etc/ufw/ufw.conf;
 
 # Limiting incomming connections to the SSH ports
@@ -104,14 +105,14 @@ ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog;
 # Disabling IPV6 in UFW
 echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog;
 
-blnk_echo;
+blnk_echo
 
 ## Updating/upgrading
 up;
-blnk_echo;
+blnk_echo
 
 ## Installing necessary CLI apps
-sctn_echo INSTALLATION;
+sctn_echo INSTALLATION
 
 # The list of the apps
 appcli="arp-scan clamav clamav-daemon clamav-freshclam curl git glances htop iptraf mc ntp ntpdate rcconf rig screen shellcheck sysbench sysv-rc-conf tmux unattended-upgrades whois"
@@ -122,7 +123,7 @@ for a in $appcli; do
 	inst $a;
 done
 
-blnk_echo;
+blnk_echo
 
 ## Unattended-Upgrades configuration section
 sctn_echo AUTOUPDATES "(Unattended-Upgrades)";
@@ -231,7 +232,7 @@ else
 	std_echo;
 fi
 
-blnk_echo;
+blnk_echo
 
 # END: Unattended-Upgrades configuration section
 
@@ -241,7 +242,7 @@ blnk_echo;
 clmcnf=(/etc/clamav/freshclam.conf);
 rprtfldr=(~/ClamAV-Reports);
 
-sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog;
+sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog
 bckup $clmcnf;
 mkdir -p $rprtfldr;
 
@@ -265,30 +266,25 @@ clamscan --recursive --no-summary --infected / 2>/dev/null | grep FOUND >> $rprt
 echo -e "Creating a \e[1m\e[34mcronjob\e[0m for the ClamAV ..." >> $rlog;
 echo -e '#!/bin/bash\n\n/usr/bin/freshclam --quiet;\n/usr/bin/clamscan --recursive --exclude-dir=/media/ --no-summary --infected / 2>/dev/null >> '$rprtfldr'/clamscan_daily_$(date +"%m-%d-%Y").txt;' >> /etc/cron.daily/clamscan.sh && chmod 755 /etc/cron.daily/clamscan.sh;
 
-blnk_echo;
+blnk_echo
 
 # # END: ClamAV section: configuration and the first scan
 
 
 # Cloning OpenVPN installation script
-sctn_echo OPEVNPN SECTION
-cd ~ && git clone -b DEV https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh;
-#git clone https://github.com/Angristan/OpenVPN-install
+# Original repository
+# git clone https://github.com/Angristan/OpenVPN-install
+sctn_echo OPEVNPN
+cd ~ && git clone -b DEV https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
 
-## MANUAL WORK
-# ========================================================================================================
+echo "Eanbling multiple logins ..." >> $rlog;
+echo "duplicate-cn" >> /etc/openvpn/server.conf;
+service openvpn@server restart;
 
-## Run openvpn.sh
-sctn_echo RUNNING OPENVPN INSTALL .... ;
-source openvpn-install.sh
-
-echo "duplicate-cn" >> /etc/openvpn/server.conf
-service openvpn@server restart
-
-sctn_echo SSHD CONFIG;
-
+sctn_echo SSHD CONFIG
 bckup sshdc;
 
+echo "Configuring SSHD Daemon ...";
 #Port 7539
 sed -i -re 's/^(Port)([[:space:]]+)22/\1\27539/' $sshdc;
 
@@ -297,9 +293,11 @@ sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\21440m/' $sshdc;
 
 #Banner /etc/issue.net
 sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
+
 service ssh restart
 
-sctn_echo UFW UPDATE;
+sctn_echo UFW UPDATE
+echo "Reloading UFW ...";
 yes | ufw delete 1 && ufw reload
 
-echo "Done" >> $rlog;
+echo "Everything finished!!!" >> $rlog;
