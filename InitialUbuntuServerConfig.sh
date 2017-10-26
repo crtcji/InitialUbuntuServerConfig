@@ -280,7 +280,7 @@ cd ~ && git clone -b DEV https://github.com/crtcji/OpenVPN-install && cd OpenVPN
 
 ## Run openvpn.sh
 sctn_echo RUNNING OPENVPN INSTALL .... ;
-./openvpn-install.sh
+source openvpn-install.sh
 
 echo "duplicate-cn" >> /etc/openvpn/server.conf
 service openvpn@server restart
