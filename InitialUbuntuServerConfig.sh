@@ -48,6 +48,11 @@ sctn_echo () {
 	echo -e "\e[1m\e[33m$@\e[0m\n==================================================================================================" >> $rlog;
 }
 
+# Echoes that a specific application ($@) is being installed
+inst_echo () {
+  echo -e "Installing \e[1m\e[34m$@\e[0m";
+}
+
 chg_unat10 () {
 	# The following options will have unattended-upgrades check for updates every day while cleaning out the local download archive each week.
 	echo "
@@ -74,6 +79,12 @@ up () {
   done
   blnk_echo;
 }
+
+# Installation
+inst () {
+	apt-get -yqqf install $@ > /dev/null >> $rlog;
+}
+
 # ------------------------------------------
 # END VARIABLES SECTION
 
@@ -92,15 +103,24 @@ ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog;
 # Disabling IPV6 in UFW
 echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog;
 
+blnk_echo;
 
 ## Updating/upgrading
 sctn_echo UPDATES;
 up;
-
+blnk_echo;
 
 ## Installing necessary CLI apps
 sctn_echo INSTALLATION;
-apt-get -yqq install arp-scan clamav clamav-daemon clamav-freshclam curl git glances htop install iptraf mc ntp ntpdate rcconf rig screen shellcheck sysbench sysv-rc-conf tmux unattended-upgrades whois >> $rlog;
+
+# The list of the apps
+appcli="arp-scan clamav clamav-daemon clamav-freshclam curl git glances htop iptraf mc ntp ntpdate rcconf rig screen shellcheck sysbench sysv-rc-conf tmux unattended-upgrades whois"
+
+# The main multi-loop for installing apps/libs
+for a in $appcli; do
+	inst_echo $a;
+	inst $a;
+done
 
 
 ## Unattended-Upgrades configuration section
