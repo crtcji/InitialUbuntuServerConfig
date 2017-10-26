@@ -14,6 +14,7 @@ fi
 rlog=(~/installation.log);
 bckp=(bckp);
 dn=/dev/null 2>&1
+sshdc=(/etc/ssh/sshd_config)
 
 # Echoes that there is no X file
 nofile_echo () {
@@ -244,6 +245,7 @@ sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog;
 bckup $clmcnf;
 mkdir -p $rprtfldr;
 
+
 # Enabling "SafeBrowsing true" mode
 enbl_echo SafeBrowsing >> $rlog;
 echo "SafeBrowsing true" >> $clmcnf;
@@ -282,14 +284,18 @@ echo "Done" >> $rlog;
 # echo "duplicate-cn" >> /etc/openvpn/server.conf
 # service openvpn@server restart
 
-## Remove 22 port from UFW and /etc/ssh/sshd_config. Add port 7539/tcp to /etc/ssh/sshd_config.
+sctn_echo SSHD CONFIG;
 
-# nano /etc/ssh/sshd_config
+bckup sshdc;
+
 #Port 7539
+sed -i -re 's/^(Port)([[:space:]]+)22/\1\27539/' $sshdc;
+
+## Authentication: 1440m - 24h
+sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\21440m/' $sshdc;
+
 #Banner /etc/issue.net
-## Authentication:
-	##1440m - 24h
-	# LoginGraceTime 1440m
-# service ssh restart
+sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
+service ssh restart
 
 # yes | ufw delete 1 && ufw reload
