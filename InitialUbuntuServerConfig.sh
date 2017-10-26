@@ -84,10 +84,10 @@ sctn_echo FIREWALL "(UFW)";
 bckup /etc/ufw/ufw.conf;
 
 # Limiting incomming connections to the SSH ports
-yes | ufw limit 22/tcp >> $rlog && yes | ufw limit 7539/tcp >> $rlog;
+ufw limit 22/tcp >> $rlog && ufw limit 7539/tcp >> $rlog;
 
 # Opening UDP incoming connections for OpenVPN and enabling the firewall
-ufw allow 1194/udp >> $rlog && ufw enable >> $rlog;
+ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog;
 
 # Disabling IPV6 in UFW
 echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog;
@@ -100,7 +100,7 @@ up;
 
 ## Installing necessary CLI apps
 sctn_echo INSTALLATION;
-apt-get -yqq install mc screen git whois htop arp-scan curl iptraf sysbench unattended-upgrades glances ntp ntpdate rcconf rig shellcheck sysv-rc-conf tmux >> $rlog;
+apt-get -yqq install arp-scan clamav clamav-daemon clamav-freshclam curl git glances htop install iptraf mc ntp ntpdate rcconf rig screen shellcheck sysbench sysv-rc-conf tmux unattended-upgrades whois >> $rlog;
 
 
 ## Unattended-Upgrades configuration section
