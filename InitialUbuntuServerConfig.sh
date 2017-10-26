@@ -272,16 +272,17 @@ blnk_echo;
 
 # Cloning OpenVPN installation script
 sctn_echo OPEVNPN SECTION
-cd ~ && git clone https://github.com/Angristan/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh;
+cd ~ && git clone -b DEV https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh;
+#git clone https://github.com/Angristan/OpenVPN-install
 
 ## MANUAL WORK
 # ========================================================================================================
 
 ## Run openvpn.sh
-# ./openvpn-install.sh
+./openvpn-install.sh
 
-# echo "duplicate-cn" >> /etc/openvpn/server.conf
-# service openvpn@server restart
+echo "duplicate-cn" >> /etc/openvpn/server.conf
+service openvpn@server restart
 
 sctn_echo SSHD CONFIG;
 
