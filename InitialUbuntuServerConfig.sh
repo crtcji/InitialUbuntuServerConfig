@@ -50,7 +50,7 @@ sctn_echo () {
 
 # Echoes that a specific application ($@) is being installed
 inst_echo () {
-  echo -e "Installing \e[1m\e[34m$@\e[0m";
+  echo -e "Installing \e[1m\e[34m$@\e[0m" >> $rlog;
 }
 
 chg_unat10 () {
@@ -106,7 +106,6 @@ echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog;
 blnk_echo;
 
 ## Updating/upgrading
-sctn_echo UPDATES;
 up;
 blnk_echo;
 
@@ -272,7 +271,7 @@ blnk_echo;
 # Cloning OpenVPN installation script
 sctn_echo OPEVNPN SECTION
 cd ~ && git clone https://github.com/Angristan/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh;
-echo "Done";
+echo "Done" >> $rlog;
 
 ## MANUAL WORK
 # ========================================================================================================
