@@ -67,7 +67,6 @@ chg_unat10 () {
 bckup () {
 	echo -e "Backing up: \e[1m\e[34m$@\e[0m ..." >> $rlog;
 	cp -r $@ $@_$(date +"%m-%d-%Y")."$bckp";
-	blnk_echo
 }
 
 # Updates/upgrades the system
@@ -274,12 +273,13 @@ blnk_echo
 # Cloning OpenVPN installation script
 # Original repository
 # git clone https://github.com/Angristan/OpenVPN-install
-sctn_echo OPEVNPN
+sctn_echo OPENVPN
 cd ~ && git clone -b DEV https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
 
 echo "Eanbling multiple logins ..." >> $rlog;
 echo "duplicate-cn" >> /etc/openvpn/server.conf;
 service openvpn@server restart;
+blnk_echo
 
 sctn_echo SSHD CONFIG
 bckup sshdc;
