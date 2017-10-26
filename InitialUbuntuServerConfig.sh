@@ -11,7 +11,7 @@ fi
 # VARIABLES SECTION
 # -----------------------------------
 
-rlog=(/root/installation.log);
+rlog=(~/installation.log);
 bckp=(bckp);
 dn=/dev/null 2>&1
 
@@ -21,7 +21,7 @@ nofile_echo () {
 }
 
 # Echoes a standard message
-std_echo () {z
+std_echo () {
 	echo -e "\e[32mPlease check it manually.\e[0m";
 	echo -e "\e[1m\e[31mThis step stops here.\e[0m";
 }
@@ -40,8 +40,12 @@ upd_echo () {
   echo -e "Updating \e[1m\e[34m$@\e[0m application ...";
 }
 
+scn_echo () {
+  echo -e "\e[1m\e[34m$@\e[0m is scanning the OS ...";
+}
+
 sctn_echo () {
-	echo -e "\e[1m\e[33m$@\e[0m\n==================================================================================================";
+	echo -e "\e[1m\e[33m$@\e[0m\n==================================================================================================" >> $rlog;
 }
 
 chg_unat10 () {
@@ -55,7 +59,7 @@ chg_unat10 () {
 
 # Backing up a given ($@) file/directory
 bckup () {
-	echo -e "Backing up: \e[1m\e[34m$@\e[0m ...";
+	echo -e "Backing up: \e[1m\e[34m$@\e[0m ..." >> $rlog;
 	cp -r $@ $@_$(date +"%m-%d-%Y")."$bckp";
 }
 
@@ -64,7 +68,7 @@ up () {
   sctn_echo UPDATES;
   upvar="update upgrade dist-upgrade";
   for upup in $upvar; do
-    echo -e "Executing \e[1m\e[34m$upup\e[0m";
+    echo -e "Executing \e[1m\e[34m$upup\e[0m" >> $rlog;
     #apt-get -yqq $upup > /dev/null 2>&1 >> $rlog;
     apt-get -yqq $upup >> $rlog;
   done
@@ -80,23 +84,23 @@ sctn_echo FIREWALL "(UFW)";
 bckup /etc/ufw/ufw.conf;
 
 # Limiting incomming connections to the SSH ports
-yes | ufw limit 22/tcp && yes | ufw limit 7539/tcp;
+yes | ufw limit 22/tcp >> $rlog && yes | ufw limit 7539/tcp >> $rlog;
 
 # Opening UDP incoming connections for OpenVPN and enabling the firewall
-ufw allow 1194/udp && ufw enable;
+ufw allow 1194/udp >> $rlog && ufw enable >> $rlog;
 
 # Disabling IPV6 in UFW
-echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload;
+echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog;
 
 
 ## Updating/upgrading
 sctn_echo UPDATES;
-apt -y update && apt -y upgrade && apt -y dist-upgrade;
+up;
 
 
 ## Installing necessary CLI apps
 sctn_echo INSTALLATION;
-apt -y install mc screen git whois htop arp-scan curl iptraf sysbench unattended-upgrades glances ntp ntpdate rcconf rig shellcheck sysv-rc-conf tmux;
+apt-get -yqq install mc screen git whois htop arp-scan curl iptraf sysbench unattended-upgrades glances ntp ntpdate rcconf rig shellcheck sysv-rc-conf tmux >> $rlog;
 
 
 ## Unattended-Upgrades configuration section
@@ -110,7 +114,7 @@ unat10=(/etc/apt/apt.conf.d/10periodic);
 if [[ -f $unat20 ]] && [[ -f $unat50 ]] && [[ -f $unat10 ]]; then
 
 	for i in $unat20 $unat50 $unat10; do
-		bckup $i && mv $i*."$bckp" /root;
+		bckup $i && mv $i*."$bckp" ~;
 	done
 
 
@@ -208,47 +212,37 @@ fi
 
 # END: Unattended-Upgrades configuration section
 
+
 # ClamAV section: configuration and the first scan
-#
-# clmcnf=(/etc/clamav/freshclam.conf);
-# rprtfldr=(/root/ClamAV-Reports);
-#
-# sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog;
-# bckup $clmcnf;
-# mkdir -p $rprtfldr;
-#
-# # Enabling "SafeBrowsing true" mode
-# enbl_echo SafeBrowsing >> $rlog;
-# echo "SafeBrowsing true" >> $clmcnf;
-#
-# # Restarting CLAMAV Daemons
-# /etc/init.d/clamav-daemon restart && /etc/init.d/clamav-freshclam restart
-# # clamdscan -V s
-#
-# # Scanning the whole system and palcing all the infected files list on a particular file
-# # echo "ClamAV is scanning the OS ...";
-# scn_echo ClamAv >> $rlog;
-# # This one throws any kind of warnings and errors: clamscan -r / | grep FOUND >> $rprtfldr/clamscan_first_scan.txt >> $rlog;
-# clamscan --recursive --no-summary --infected / 2>/dev/null | grep FOUND >> $rprtfldr/clamscan_first_scan.txt;
-# # Crontab: The daily scan
-#
-# # The below cronjob will run a virus database definition update (so that the scan always has the most recent definitions) and afterwards run a full scan which will only report when there are infected files on the system. It also does not remove the infected files automatically, you have to do this manually. This way you make sure that it does not delete /bin/bash by accident.
-# #
-# # The 2>/dev/null options keeps the /proc and such access denied errors out of the report. The infected files however are still found and reported.
-# #
-# # Also make sure that your cron is configured so that it mails you the output of the cronjobs. The manual page will help you with that.
-#
-# # One way: if the computer is off in the time frame when it is supposed to be scanned by the daemon, it will NOT be scanned next time the computer is on.
-# 									#crontab -l | { cat; echo "
-# # ## ClamAV Daily scan
-# # 30 01 * * * /usr/bin/freshclam --quiet; /usr/bin/clamscan --recursive --no-summary --infected / 2>/dev/null >> $rprtfldr/clamscan_daily.txt"; } | crontab -
-#
-# # This way, Anacron ensures that if the computer is off during the time interval when it is supposed to be scanned by the daemon, it will be scanned next time it is turned on, no matter today or another day.
-# echo -e "Creating a \e[1m\e[34mcronjob\e[0m for the ClamAV ..." >> $rlog;
-# echo -e '#!/bin/bash\n\n/usr/bin/freshclam --quiet;\n/usr/bin/clamscan --recursive --exclude-dir=/media/ --no-summary --infected / 2>/dev/null >> '$rprtfldr'/clamscan_daily_$(date +"%m-%d-%Y").txt;' >> /etc/cron.daily/clamscan.sh && chmod 755 /etc/cron.daily/clamscan.sh;
-#
-# blnk_echo >> $rlog;
-#
+
+clmcnf=(/etc/clamav/freshclam.conf);
+rprtfldr=(~/ClamAV-Reports);
+
+sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog;
+bckup $clmcnf;
+mkdir -p $rprtfldr;
+
+# Enabling "SafeBrowsing true" mode
+enbl_echo SafeBrowsing >> $rlog;
+echo "SafeBrowsing true" >> $clmcnf;
+
+# Restarting CLAMAV Daemons
+/etc/init.d/clamav-daemon restart && /etc/init.d/clamav-freshclam restart
+# clamdscan -V s
+
+# Scanning the whole system and palcing all the infected files list on a particular file
+echo "ClamAV is scanning the OS ...";
+scn_echo ClamAv >> $rlog;
+# This one throws any kind of warnings and errors: clamscan -r / | grep FOUND >> $rprtfldr/clamscan_first_scan.txt >> $rlog;
+clamscan --recursive --no-summary --infected / 2>/dev/null | grep FOUND >> $rprtfldr/clamscan_first_scan.txt;
+# Crontab: The daily scan
+
+# This way, Anacron ensures that if the computer is off during the time interval when it is supposed to be scanned by the daemon, it will be scanned next time it is turned on, no matter today or another day.
+echo -e "Creating a \e[1m\e[34mcronjob\e[0m for the ClamAV ..." >> $rlog;
+echo -e '#!/bin/bash\n\n/usr/bin/freshclam --quiet;\n/usr/bin/clamscan --recursive --exclude-dir=/media/ --no-summary --infected / 2>/dev/null >> '$rprtfldr'/clamscan_daily_$(date +"%m-%d-%Y").txt;' >> /etc/cron.daily/clamscan.sh && chmod 755 /etc/cron.daily/clamscan.sh;
+
+blnk_echo >> $rlog;
+
 # # END: ClamAV section: configuration and the first scan
 
 
