@@ -15,10 +15,18 @@ fi
 # VARIABLES SECTION
 # -----------------------------------
 
-rlog=(~/installation.log);
-bckp=(bckp);
-dn=/dev/null 2>&1
+# SSHD config file
 sshdc=(/etc/ssh/sshd_config)
+# SSH port
+sshp=7539
+# LoginGraceTime
+lgt=1440m
+# Installation log
+rlog=(~/installation.log);
+# Backup extension
+bckp=(bckp);
+# Shortenned /dev/null
+dn=/dev/null 2>&1
 
 # Echoes that there is no X file
 nofile_echo () {
@@ -100,8 +108,8 @@ sctn_echo FIREWALL "(UFW)"
 
 bckup /etc/ufw/ufw.conf;
 
-# Disabling IPV6 in UFW && Opening 7539/tcp and Limiting incomming connections to the SSH port
-(echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit 7539/tcp && ufw --force enable) >> $rlog
+# Disabling IPV6 in UFW && Opening $sshp/tcp and Limiting incomming connections to the SSH port
+(echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit $sshp/tcp && ufw --force enable) >> $rlog
 
 # Opening UDP incoming connections for OpenVPN and enabling the firewall
 #ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog
@@ -113,11 +121,12 @@ bckup sshdc;
 blnk_echo
 
 echo "Configuring SSHD Daemon ..." >> $rlog
-#Port 7539
-sed -i -re 's/^(Port)([[:space:]]+)22/\1\27539/' $sshdc;
+
+#Port $sshp
+sed -i -re 's/^(Port)([[:space:]]+)22/\1\2'$sshp'/' $sshdc;
 
 ## Authentication: 1440m - 24h
-sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\21440m/' $sshdc;
+sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\2'$lgt'/' $sshdc;
 
 #Banner /etc/issue.net
 sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
