@@ -244,6 +244,7 @@ rprtfldr=(~/ClamAV-Reports);
 sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog
 bckup $clmcnf;
 mkdir -p $rprtfldr;
+blnk_echo
 
 
 # Enabling "SafeBrowsing true" mode
@@ -276,13 +277,14 @@ blnk_echo
 sctn_echo OPENVPN
 cd ~ && git clone -b DEV https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
 
-echo "Eanbling multiple logins ..." >> $rlog;
+echo "Enabling multiple logins ..." >> $rlog;
 echo "duplicate-cn" >> /etc/openvpn/server.conf;
 service openvpn@server restart;
 blnk_echo
 
 sctn_echo SSHD CONFIG
 bckup sshdc;
+blnk_echo
 
 echo "Configuring SSHD Daemon ...";
 #Port 7539
@@ -297,7 +299,8 @@ sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
 service ssh restart
 
 sctn_echo UFW UPDATE
-echo "Reloading UFW ...";
+echo "Reloading UFW ..." >> $rlog;
+blnk_echo
 yes | ufw delete 1 && ufw reload
 
 # @NOTE Will have to modify this loop to echo "Everything went well"  otherwise echo that something went wrong
@@ -307,4 +310,6 @@ yes | ufw delete 1 && ufw reload
 # fi
 
 echo "Everything finished!!!" >> $rlog;
+blnk_echo
+
 exit 0;
