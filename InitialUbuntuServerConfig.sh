@@ -46,7 +46,7 @@ upd_echo () {
 }
 
 scn_echo () {
-  echo -e "\e[1m\e[34m$@\e[0m is scanning the OS ...";
+  echo -e "\e[1m\e[34m$@\e[0m is scanning the OS ..." >> $rlog
 }
 
 sctn_echo () {
@@ -96,42 +96,37 @@ inst () {
 
 
 ## UFW
-# Backing up the file
 sctn_echo FIREWALL "(UFW)"
+
 bckup /etc/ufw/ufw.conf;
 
-# Limiting incomming connections to the SSH ports
-(ufw limit 22/tcp && ufw limit 7539/tcp && ufw --force enable) >> $rlog
-(echo "Reloading UFW ..." && ufw --force delete 1 && --force ufw reload) >> $rlog
+# Disabling IPV6 in UFW && Opening 7539/tcp and Limiting incomming connections to the SSH port
+(echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit 7539/tcp && ufw --force enable) >> $rlog
 
 # Opening UDP incoming connections for OpenVPN and enabling the firewall
 #ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog
 
-# Disabling IPV6 in UFW
-echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog
-
 blnk_echo
 
-## Updating/upgrading
-up;
+sctn_echo SSHD CONFIG
+bckup sshdc;
 blnk_echo
 
-## Installing necessary CLI apps
-sctn_echo INSTALLATION
+echo "Configuring SSHD Daemon ..." >> $rlog
+#Port 7539
+sed -i -re 's/^(Port)([[:space:]]+)22/\1\27539/' $sshdc;
 
-# The list of the apps
-appcli="arp-scan clamav clamav-daemon clamav-freshclam curl git glances htop iptraf mc ntp ntpdate rcconf rig screen shellcheck sysbench sysv-rc-conf tmux unattended-upgrades whois"
+## Authentication: 1440m - 24h
+sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\21440m/' $sshdc;
 
-# The main multi-loop for installing apps/libs
-for a in $appcli; do
-	inst_echo $a;
-	inst $a;
-done
+#Banner /etc/issue.net
+sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
 
-blnk_echo
+service ssh restart
+
 
 ## Unattended-Upgrades configuration section
-sctn_echo AUTOUPDATES "(Unattended-Upgrades)";
+sctn_echo AUTOUPDATES "(Unattended-Upgrades)"
 
 unat20=(/etc/apt/apt.conf.d/20auto-upgrades);
 unat50=(/etc/apt/apt.conf.d/50unattended-upgrades);
@@ -147,9 +142,9 @@ if [[ -f $unat20 ]] && [[ -f $unat50 ]] && [[ -f $unat10 ]]; then
 
 	# Inserting the right values into it
 	echo "
-APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Unattended-Upgrade "1";
-APT::Periodic::Verbose "2";" > $unat20;
+	APT::Periodic::Update-Package-Lists "1";
+	APT::Periodic::Unattended-Upgrade "1";
+	APT::Periodic::Verbose "2";" > $unat20;
 
 
 	# Checking if line for security updates is uncommented, by default it is
@@ -158,71 +153,71 @@ APT::Periodic::Verbose "2";" > $unat20;
 		chg_unat10;
 	else
 		echo "
-// Automatically upgrade packages from these (origin:archive) pairs
-Unattended-Upgrade::Allowed-Origins {
-	"${distro_id}:${distro_codename}";
-	"${distro_id}:${distro_codename}-security";
-	// Extended Security Maintenance; doesn't necessarily exist for
-	// every release and this system may not have it installed, but if
-	// available, the policy for updates is such that unattended-upgrades
-	// should also install from here by default.
-	"${distro_id}ESM:${distro_codename}";
-	//	"${distro_id}:${distro_codename}-updates";
-	//	"${distro_id}:${distro_codename}-proposed";
-	//	"${distro_id}:${distro_codename}-backports";
-};
+		// Automatically upgrade packages from these (origin:archive) pairs
+		Unattended-Upgrade::Allowed-Origins {
+			"${distro_id}:${distro_codename}";
+			"${distro_id}:${distro_codename}-security";
+			// Extended Security Maintenance; doesn't necessarily exist for
+			// every release and this system may not have it installed, but if
+			// available, the policy for updates is such that unattended-upgrades
+			// should also install from here by default.
+			"${distro_id}ESM:${distro_codename}";
+			//	"${distro_id}:${distro_codename}-updates";
+			//	"${distro_id}:${distro_codename}-proposed";
+			//	"${distro_id}:${distro_codename}-backports";
+		};
 
-// List of packages to not update (regexp are supported)
-Unattended-Upgrade::Package-Blacklist {
-	//	"vim";
-	//	"libc6";
-	//	"libc6-dev";
-	//	"libc6-i686";
-};
+		// List of packages to not update (regexp are supported)
+		Unattended-Upgrade::Package-Blacklist {
+			//	"vim";
+			//	"libc6";
+			//	"libc6-dev";
+			//	"libc6-i686";
+		};
 
-// This option allows you to control if on a unclean dpkg exit
-// unattended-upgrades will automatically run
-//   dpkg --force-confold --configure -a
-// The default is true, to ensure updates keep getting installed
-//Unattended-Upgrade::AutoFixInterruptedDpkg "false";
+		// This option allows you to control if on a unclean dpkg exit
+		// unattended-upgrades will automatically run
+		//   dpkg --force-confold --configure -a
+		// The default is true, to ensure updates keep getting installed
+		//Unattended-Upgrade::AutoFixInterruptedDpkg "false";
 
-// Split the upgrade into the smallest possible chunks so that
-// they can be interrupted with SIGUSR1. This makes the upgrade
-// a bit slower but it has the benefit that shutdown while a upgrade
-// is running is possible (with a small delay)
-//Unattended-Upgrade::MinimalSteps "true";
+		// Split the upgrade into the smallest possible chunks so that
+		// they can be interrupted with SIGUSR1. This makes the upgrade
+		// a bit slower but it has the benefit that shutdown while a upgrade
+		// is running is possible (with a small delay)
+		//Unattended-Upgrade::MinimalSteps "true";
 
-// Install all unattended-upgrades when the machine is shuting down
-// instead of doing it in the background while the machine is running
-// This will (obviously) make shutdown slower
-//Unattended-Upgrade::InstallOnShutdown "true";
+		// Install all unattended-upgrades when the machine is shuting down
+		// instead of doing it in the background while the machine is running
+		// This will (obviously) make shutdown slower
+		//Unattended-Upgrade::InstallOnShutdown "true";
 
-// Send email to this address for problems or packages upgrades
-// If empty or unset then no email is sent, make sure that you
-// have a working mail setup on your system. A package that provides
-// 'mailx' must be installed. E.g. "user@example.com"
-//Unattended-Upgrade::Mail "root";
+		// Send email to this address for problems or packages upgrades
+		// If empty or unset then no email is sent, make sure that you
+		// have a working mail setup on your system. A package that provides
+		// 'mailx' must be installed. E.g. "user@example.com"
+		//Unattended-Upgrade::Mail "root";
 
-// Set this value to "true" to get emails only on errors. Default
-// is to always send a mail if Unattended-Upgrade::Mail is set
-//Unattended-Upgrade::MailOnlyOnError "true";
+		// Set this value to "true" to get emails only on errors. Default
+		// is to always send a mail if Unattended-Upgrade::Mail is set
+		//Unattended-Upgrade::MailOnlyOnError "true";
 
-// Do automatic removal of new unused dependencies after the upgrade
-// (equivalent to apt-get autoremove)
-//Unattended-Upgrade::Remove-Unused-Dependencies "false";
+		// Do automatic removal of new unused dependencies after the upgrade
+		// (equivalent to apt-get autoremove)
+		//Unattended-Upgrade::Remove-Unused-Dependencies "false";
 
-// Automatically reboot *WITHOUT CONFIRMATION*
-//  if the file /var/run/reboot-required is found after the upgrade
-//Unattended-Upgrade::Automatic-Reboot "false";
+		// Automatically reboot *WITHOUT CONFIRMATION*
+		//  if the file /var/run/reboot-required is found after the upgrade
+		//Unattended-Upgrade::Automatic-Reboot "false";
 
-// If automatic reboot is enabled and needed, reboot at the specific
-// time instead of immediately
-//  Default: "now"
-//Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+		// If automatic reboot is enabled and needed, reboot at the specific
+		// time instead of immediately
+		//  Default: "now"
+		//Unattended-Upgrade::Automatic-Reboot-Time "02:00";
 
-// Use apt bandwidth limit feature, this example limits the download
-// speed to 70kb/sec
-//Acquire::http::Dl-Limit "70";" > $unat50;
+		// Use apt bandwidth limit feature, this example limits the download
+		// speed to 70kb/sec
+		//Acquire::http::Dl-Limit "70";" > $unat50;
 
 		chg_unat10;
 	fi
@@ -242,32 +237,48 @@ blnk_echo
 # END: Unattended-Upgrades configuration section
 
 
+## Updating/upgrading
+up;
+
+
+## Installing necessary CLI apps
+sctn_echo INSTALLATION
+
+# The list of the apps
+appcli="arp-scan clamav clamav-daemon clamav-freshclam curl git glances htop iptraf mc ntp ntpdate rcconf rig screen shellcheck sysbench sysv-rc-conf tmux unattended-upgrades whois"
+
+# The main multi-loop for installing apps/libs
+for a in $appcli; do
+	inst_echo $a;
+	inst $a;
+done
+
+blnk_echo
+
+
 # ClamAV section: configuration and the first scan
+sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog
 
 clmcnf=(/etc/clamav/freshclam.conf);
 rprtfldr=(~/ClamAV-Reports);
 
-sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog
 bckup $clmcnf;
 mkdir -p $rprtfldr;
-blnk_echo
-
 
 # Enabling "SafeBrowsing true" mode
 enbl_echo SafeBrowsing >> $rlog
 echo "SafeBrowsing true" >> $clmcnf;
 
 # Restarting CLAMAV Daemons
-/etc/init.d/clamav-daemon restart && /etc/init.d/clamav-freshclam restart
+/etc/init.d/clamav-daemon restart && /etc/init.d/clamav-freshclam restart;
 # clamdscan -V s
 
 # Scanning the whole system and palcing all the infected files list on a particular file
-echo "ClamAV is scanning the OS ...";
 scn_echo ClamAv >> $rlog
 # This one throws any kind of warnings and errors: clamscan -r / | grep FOUND >> $rprtfldr/clamscan_first_scan.txt >> $rlog
 clamscan --recursive --no-summary --infected / 2>/dev/null | grep FOUND >> $rprtfldr/clamscan_first_scan.txt;
-# Crontab: The daily scan
 
+# Crontab: The daily scan
 # This way, Anacron ensures that if the computer is off during the time interval when it is supposed to be scanned by the daemon, it will be scanned next time it is turned on, no matter today or another day.
 echo -e "Creating a \e[1m\e[34mcronjob\e[0m for the ClamAV ..." >> $rlog
 echo -e '#!/bin/bash\n\n/usr/bin/freshclam --quiet;\n/usr/bin/clamscan --recursive --exclude-dir=/media/ --no-summary --infected / 2>/dev/null >> '$rprtfldr'/clamscan_daily_$(date +"%m-%d-%Y").txt;' >> /etc/cron.daily/clamscan.sh && chmod 755 /etc/cron.daily/clamscan.sh;
@@ -285,22 +296,6 @@ blnk_echo
 # echo "duplicate-cn" >> /etc/openvpn/server.conf;
 # service openvpn@server restart;
 # blnk_echo
-
-sctn_echo SSHD CONFIG
-bckup sshdc;
-blnk_echo
-
-echo "Configuring SSHD Daemon ...";
-#Port 7539
-sed -i -re 's/^(Port)([[:space:]]+)22/\1\27539/' $sshdc;
-
-## Authentication: 1440m - 24h
-sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\21440m/' $sshdc;
-
-#Banner /etc/issue.net
-sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
-
-service ssh restart
 
 
 # @NOTE Will have to modify this loop to echo "Everything went well"  otherwise echo that something went wrong
