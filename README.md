@@ -1,2 +1,2 @@
 # InitialUbuntuServerConfig
-A hande tool to initialize a secure droplet
+A handle tool to initialize a general type of secure droplet
