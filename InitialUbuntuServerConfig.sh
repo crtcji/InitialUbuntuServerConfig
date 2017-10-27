@@ -1,4 +1,7 @@
 #!/bin/bash
+# @TODO ntpdate
+# @TODO rkhunter
+# @TODO audit or instrusion system
 
 # Made with love to be executed on an Ubuntu 16.04 LTS droplet
 
