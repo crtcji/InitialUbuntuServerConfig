@@ -275,10 +275,8 @@ blnk_echo
 
 
 # Cloning OpenVPN installation script
-# Original repository
-# git clone https://github.com/Angristan/OpenVPN-install
 sctn_echo OPENVPN
-cd ~ && git clone -b DEV https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
+cd ~ && git clone https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
 
 echo "Enabling multiple logins ..." >> $rlog;
 echo "duplicate-cn" >> /etc/openvpn/server.conf;
