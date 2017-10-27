@@ -300,5 +300,11 @@ sctn_echo UFW UPDATE
 echo "Reloading UFW ...";
 yes | ufw delete 1 && ufw reload
 
+# @NOTE Will have to modify this loop to echo "Everything went well"  otherwise echo that something went wrong
+# if [[ "$EUID" -ne 0 ]]; then
+# 	echo "Sorry, you need to run this as root"
+# 	exit 1
+# fi
+
 echo "Everything finished!!!" >> $rlog;
 exit 0;
