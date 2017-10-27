@@ -20,7 +20,7 @@ sshdc=(/etc/ssh/sshd_config)
 # SSH port
 sshp=7539
 # LoginGraceTime
-lgt=1440m
+sshlgt=1440m
 # Installation log
 rlog=(~/installation.log);
 # Backup extension
@@ -122,14 +122,8 @@ blnk_echo
 
 echo "Configuring SSHD Daemon ..." >> $rlog
 
-#Port $sshp
-sed -i -re 's/^(Port)([[:space:]]+)22/\1\2'$sshp'/' $sshdc;
-
-## Authentication: 1440m - 24h
-sed -i -re 's/^(LoginGraceTime)([[:space:]]+)120/\1\2'$lgt'/' $sshdc;
-
-#Banner /etc/issue.net
-sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
+# Switching defauly SSH port to $sshp && changing LoginGraceTime to 24h (1440m) && enabling #Banner /etc/issue.net
+sed -i -re 's/^(Port)([[:space:]]+)22/\1\2'$sshp'/' -e 's/^(LoginGraceTime)([[:space:]]+)120/\1\2'$sshlgt'/' -e 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
 
 service ssh restart
 
@@ -153,7 +147,7 @@ if [[ -f $unat20 ]] && [[ -f $unat50 ]] && [[ -f $unat10 ]]; then
 	echo "
 	APT::Periodic::Update-Package-Lists "1";
 	APT::Periodic::Unattended-Upgrade "1";
-	APT::Periodic::Verbose "2";" > $unat20;
+	APT::Periodic::Verbose "2";" > $unat20
 
 
 	# Checking if line for security updates is uncommented, by default it is
@@ -226,7 +220,7 @@ if [[ -f $unat20 ]] && [[ -f $unat50 ]] && [[ -f $unat10 ]]; then
 
 		// Use apt bandwidth limit feature, this example limits the download
 		// speed to 70kb/sec
-		//Acquire::http::Dl-Limit "70";" > $unat50;
+		//Acquire::http::Dl-Limit "70";" > $unat50
 
 		chg_unat10;
 	fi
@@ -237,7 +231,7 @@ if [[ -f $unat20 ]] && [[ -f $unat50 ]] && [[ -f $unat10 ]]; then
 	blnk_echo >> $rlog
 
 else
-	nofile_echo $unat20 or $unat50 or $unat10;
+	nofile_echo $unat20 or $unat50 or $unat10
 	std_echo;
 fi
 
