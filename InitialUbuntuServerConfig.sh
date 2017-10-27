@@ -112,7 +112,7 @@ bckup /etc/ufw/ufw.conf;
 (echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit $sshp/tcp && ufw --force enable) >> $rlog
 
 # Opening UDP incoming connections for OpenVPN and enabling the firewall
-#ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog
+#ufw limit 1194/udp >> $rlog && ufw --force enable >> $rlog
 
 blnk_echo
 
