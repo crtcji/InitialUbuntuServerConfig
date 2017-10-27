@@ -301,3 +301,4 @@ echo "Reloading UFW ...";
 yes | ufw delete 1 && ufw reload
 
 echo "Everything finished!!!" >> $rlog;
+exit 0;
