@@ -111,9 +111,6 @@ bckup /etc/ufw/ufw.conf;
 # Disabling IPV6 in UFW && Opening $sshp/tcp and Limiting incomming connections to the SSH port
 (echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit $sshp/tcp && ufw --force enable) >> $rlog
 
-# Opening UDP incoming connections for OpenVPN and enabling the firewall
-#ufw limit 1194/udp >> $rlog && ufw --force enable >> $rlog
-
 blnk_echo
 
 sctn_echo SSHD CONFIG
