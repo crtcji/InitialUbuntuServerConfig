@@ -57,10 +57,10 @@ inst_echo () {
 chg_unat10 () {
 	# The following options will have unattended-upgrades check for updates every day while cleaning out the local download archive each week.
 	echo "
-	APT::Periodic::Update-Package-Lists "1";
-	APT::Periodic::Download-Upgradeable-Packages "1";
-	APT::Periodic::AutocleanInterval "7";
-	APT::Periodic::Unattended-Upgrade "1";" > $unat10;
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "7";
+APT::Periodic::Unattended-Upgrade "1";" > $unat10;
 }
 
 # Backing up a given ($@) file/directory
