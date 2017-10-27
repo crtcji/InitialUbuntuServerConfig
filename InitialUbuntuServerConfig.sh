@@ -1,5 +1,6 @@
 #!/bin/bash
 # @TODO ntpdate
+# @TODO fail2ban http://www.servermom.org/how-to-install-fail2ban-to-protect-server-from-brute-force-ssh-login-attempts-ubuntu/
 # @TODO rkhunter
 # @TODO audit or intrusion system
 
@@ -31,7 +32,7 @@ std_echo () {
 }
 
 blnk_echo() {
-	echo "" >> $rlog;
+	echo "" >> $rlog
 }
 
 # Echoes activation of a specific application option ($@)
@@ -49,12 +50,12 @@ scn_echo () {
 }
 
 sctn_echo () {
-	echo -e "\e[1m\e[33m$@\e[0m\n==================================================================================================" >> $rlog;
+	echo -e "\e[1m\e[33m$@\e[0m\n==================================================================================================" >> $rlog
 }
 
 # Echoes that a specific application ($@) is being installed
 inst_echo () {
-  echo -e "Installing \e[1m\e[34m$@\e[0m" >> $rlog;
+  echo -e "Installing \e[1m\e[34m$@\e[0m" >> $rlog
 }
 
 chg_unat10 () {
@@ -68,7 +69,7 @@ APT::Periodic::Unattended-Upgrade "1";" > $unat10;
 
 # Backing up a given ($@) file/directory
 bckup () {
-	echo -e "Backing up: \e[1m\e[34m$@\e[0m ..." >> $rlog;
+	echo -e "Backing up: \e[1m\e[34m$@\e[0m ..." >> $rlog
 	cp -r $@ $@_$(date +"%m-%d-%Y")."$bckp";
 }
 
@@ -77,16 +78,16 @@ up () {
   sctn_echo UPDATES
   upvar="update upgrade dist-upgrade";
   for upup in $upvar; do
-    echo -e "Executing \e[1m\e[34m$upup\e[0m" >> $rlog;
-    #apt-get -yqq $upup > /dev/null 2>&1 >> $rlog;
-    apt-get -yqq $upup >> $rlog;
+    echo -e "Executing \e[1m\e[34m$upup\e[0m" >> $rlog
+    #apt-get -yqq $upup > /dev/null 2>&1 >> $rlog
+    apt-get -yqq $upup >> $rlog
   done
   blnk_echo
 }
 
 # Installation
 inst () {
-	apt-get -yqqf install $@ > /dev/null >> $rlog;
+	apt-get -yqqf install $@ > /dev/null >> $rlog
 	blnk_echo
 }
 
@@ -100,13 +101,14 @@ sctn_echo FIREWALL "(UFW)"
 bckup /etc/ufw/ufw.conf;
 
 # Limiting incomming connections to the SSH ports
-ufw limit 22/tcp >> $rlog && ufw limit 7539/tcp >> $rlog;
+(ufw limit 22/tcp && ufw limit 7539/tcp && ufw --force enable) >> $rlog
+(echo "Reloading UFW ..." && ufw --force delete 1 && --force ufw reload) >> $rlog
 
 # Opening UDP incoming connections for OpenVPN and enabling the firewall
-#ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog;
+#ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog
 
 # Disabling IPV6 in UFW
-echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog;
+echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog
 
 blnk_echo
 
@@ -228,7 +230,7 @@ Unattended-Upgrade::Package-Blacklist {
 	# The results of unattended-upgrades will be logged to /var/log/unattended-upgrades.
 	# For more tweaks nano /etc/apt/apt.conf.d/50unattended-upgrades
 
-	blnk_echo >> $rlog;
+	blnk_echo >> $rlog
 
 else
 	nofile_echo $unat20 or $unat50 or $unat10;
@@ -252,7 +254,7 @@ blnk_echo
 
 
 # Enabling "SafeBrowsing true" mode
-enbl_echo SafeBrowsing >> $rlog;
+enbl_echo SafeBrowsing >> $rlog
 echo "SafeBrowsing true" >> $clmcnf;
 
 # Restarting CLAMAV Daemons
@@ -261,13 +263,13 @@ echo "SafeBrowsing true" >> $clmcnf;
 
 # Scanning the whole system and palcing all the infected files list on a particular file
 echo "ClamAV is scanning the OS ...";
-scn_echo ClamAv >> $rlog;
-# This one throws any kind of warnings and errors: clamscan -r / | grep FOUND >> $rprtfldr/clamscan_first_scan.txt >> $rlog;
+scn_echo ClamAv >> $rlog
+# This one throws any kind of warnings and errors: clamscan -r / | grep FOUND >> $rprtfldr/clamscan_first_scan.txt >> $rlog
 clamscan --recursive --no-summary --infected / 2>/dev/null | grep FOUND >> $rprtfldr/clamscan_first_scan.txt;
 # Crontab: The daily scan
 
 # This way, Anacron ensures that if the computer is off during the time interval when it is supposed to be scanned by the daemon, it will be scanned next time it is turned on, no matter today or another day.
-echo -e "Creating a \e[1m\e[34mcronjob\e[0m for the ClamAV ..." >> $rlog;
+echo -e "Creating a \e[1m\e[34mcronjob\e[0m for the ClamAV ..." >> $rlog
 echo -e '#!/bin/bash\n\n/usr/bin/freshclam --quiet;\n/usr/bin/clamscan --recursive --exclude-dir=/media/ --no-summary --infected / 2>/dev/null >> '$rprtfldr'/clamscan_daily_$(date +"%m-%d-%Y").txt;' >> /etc/cron.daily/clamscan.sh && chmod 755 /etc/cron.daily/clamscan.sh;
 
 blnk_echo
@@ -279,7 +281,7 @@ blnk_echo
 # sctn_echo OPENVPN
 # cd ~ && git clone https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
 #
-# echo "Enabling multiple logins ..." >> $rlog;
+# echo "Enabling multiple logins ..." >> $rlog
 # echo "duplicate-cn" >> /etc/openvpn/server.conf;
 # service openvpn@server restart;
 # blnk_echo
@@ -300,10 +302,6 @@ sed -i -re 's/^(\#)(Banner)([[:space:]]+)(.*)/\2\3\4/' $sshdc;
 
 service ssh restart
 
-sctn_echo UFW UPDATE
-echo "Reloading UFW ..." >> $rlog;
-blnk_echo
-yes | ufw delete 1 && ufw reload
 
 # @NOTE Will have to modify this loop to echo "Everything went well"  otherwise echo that something went wrong
 # if [[ "$EUID" -ne 0 ]]; then
@@ -311,7 +309,7 @@ yes | ufw delete 1 && ufw reload
 # 	exit 1
 # fi
 
-echo "Everything finished!!!" >> $rlog;
+echo "Everything finished!!!" >> $rlog
 blnk_echo
 
 exit 0;
