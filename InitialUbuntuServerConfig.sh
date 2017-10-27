@@ -1,7 +1,7 @@
 #!/bin/bash
 # @TODO ntpdate
 # @TODO rkhunter
-# @TODO audit or instrusion system
+# @TODO audit or intrusion system
 
 # Made with love to be executed on an Ubuntu 16.04 LTS droplet
 
@@ -87,6 +87,7 @@ up () {
 # Installation
 inst () {
 	apt-get -yqqf install $@ > /dev/null >> $rlog;
+	blnk_echo
 }
 
 # ------------------------------------------
@@ -102,7 +103,7 @@ bckup /etc/ufw/ufw.conf;
 ufw limit 22/tcp >> $rlog && ufw limit 7539/tcp >> $rlog;
 
 # Opening UDP incoming connections for OpenVPN and enabling the firewall
-ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog;
+#ufw allow 1194/udp >> $rlog && ufw --force enable >> $rlog;
 
 # Disabling IPV6 in UFW
 echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw reload >> $rlog;
@@ -274,14 +275,14 @@ blnk_echo
 # # END: ClamAV section: configuration and the first scan
 
 
-# Cloning OpenVPN installation script
-sctn_echo OPENVPN
-cd ~ && git clone https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
-
-echo "Enabling multiple logins ..." >> $rlog;
-echo "duplicate-cn" >> /etc/openvpn/server.conf;
-service openvpn@server restart;
-blnk_echo
+# # Cloning OpenVPN installation script
+# sctn_echo OPENVPN
+# cd ~ && git clone https://github.com/crtcji/OpenVPN-install && cd OpenVPN-install && chmod 755 openvpn-install.sh && /bin/bash openvpn-install.sh;
+#
+# echo "Enabling multiple logins ..." >> $rlog;
+# echo "duplicate-cn" >> /etc/openvpn/server.conf;
+# service openvpn@server restart;
+# blnk_echo
 
 sctn_echo SSHD CONFIG
 bckup sshdc;
