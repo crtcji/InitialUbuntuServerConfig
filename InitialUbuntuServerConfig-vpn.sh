@@ -17,7 +17,9 @@ fi
 # -----------------------------------
 
 # SSHD config file
-sshdc=(/etc/ssh/sshd_config);
+sshdc=/etc/ssh/sshd_config
+# Sources.list file
+slist=/etc/apt/sources.list
 # SSH port
 sshp=7539
 # LoginGraceTime
@@ -25,9 +27,9 @@ sshlgt=1440m
 #OpenVPN port
 opvpnp=1194
 # Installation log
-rlog=(~/installation.log);
+rlog=~/installation.log
 # Backup extension
-bckp=(bckp);
+bckp=bckp;
 # Shortenned /dev/null
 dn=/dev/null 2>&1
 
@@ -112,6 +114,16 @@ sctn_echo FIREWALL "(UFW)"
 bckup /etc/ufw/ufw.conf;
 
 # Disabling IPV6 in UFW && Opening $sshp/tcp && Opening UDP incoming connections for OpenVPN && and Limiting incomming connections to the SSH and OpenVPN ports
+
+# For Trabia
+# Removing "md." from every URL
+if [[ $(cat $slist | grep -w "md") ]]; then
+	bckup $slist;
+	sed -i -re s/md.//g $slist;
+	# Forcing apt-get to access repos through IPV4
+	echo 'Acquire::ForceIPv4 "true";' | tee /etc/apt/apt.conf.d/99force-ipv4
+fi
+
 (echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit $sshp/tcp && ufw limit $opvpnp/udp && ufw --force enable) >> $rlog
 
 blnk_echo
@@ -131,9 +143,9 @@ service ssh restart
 ## Unattended-Upgrades configuration section
 sctn_echo AUTOUPDATES "(Unattended-Upgrades)"
 
-unat20=(/etc/apt/apt.conf.d/20auto-upgrades);
-unat50=(/etc/apt/apt.conf.d/50unattended-upgrades);
-unat10=(/etc/apt/apt.conf.d/10periodic);
+unat20=/etc/apt/apt.conf.d/20auto-upgrades;
+unat50=/etc/apt/apt.conf.d/50unattended-upgrades;
+unat10=/etc/apt/apt.conf.d/10periodic;
 
 # Cheking the existence of the $unat20, $unat50, $unat10 configuration files
 if [[ -f $unat20 ]] && [[ -f $unat50 ]] && [[ -f $unat10 ]]; then
@@ -262,8 +274,8 @@ blnk_echo
 # ClamAV section: configuration and the first scan
 sctn_echo ANTIVIRUS "(Clam-AV)" >> $rlog
 
-clmcnf=(/etc/clamav/freshclam.conf);
-rprtfldr=(~/ClamAV-Reports);
+clmcnf=/etc/clamav/freshclam.conf
+rprtfldr=~/ClamAV-Reports
 
 bckup $clmcnf;
 mkdir -p $rprtfldr;
