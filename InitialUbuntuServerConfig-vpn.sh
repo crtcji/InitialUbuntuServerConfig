@@ -17,7 +17,7 @@ fi
 # -----------------------------------
 
 # SSHD config file
-sshdc=(/etc/ssh/sshd_config)
+sshdc=(/etc/ssh/sshd_config);
 # SSH port
 sshp=7539
 # LoginGraceTime
@@ -117,7 +117,7 @@ bckup /etc/ufw/ufw.conf;
 blnk_echo
 
 sctn_echo SSHD CONFIG
-bckup sshdc;
+bckup $sshdc;
 blnk_echo
 
 echo "Configuring SSHD Daemon ..." >> $rlog
