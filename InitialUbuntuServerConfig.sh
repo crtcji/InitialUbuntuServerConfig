@@ -15,6 +15,8 @@ fi
 # VARIABLES SECTION
 # -----------------------------------
 
+# Hostname
+hstnm=gw2.dirigio.it
 # SSHD config file
 sshdc=/etc/ssh/sshd_config
 # Sources.list file
@@ -119,6 +121,9 @@ if [[ $(cat $slist | grep -w "md") ]]; then
 	sed -i -re s/md.//g $slist;
 	# Forcing apt-get to access repos through IPV4
 	echo 'Acquire::ForceIPv4 "true";' | tee /etc/apt/apt.conf.d/99force-ipv4
+
+		# Renaming the hostname
+		echo $hstnm > /etc/hostname;
 fi
 
 (echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit $sshp/tcp && ufw --force enable) >> $rlog
