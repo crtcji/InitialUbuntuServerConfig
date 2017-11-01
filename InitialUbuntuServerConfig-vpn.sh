@@ -20,6 +20,8 @@ fi
 hstnm=gw2.dirigio.it
 # SSHD config file
 sshdc=/etc/ssh/sshd_config
+# SSH Publcic key
+sshkey="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQD+P+eX68j7KULVp0QcXto39i74c4qiFVcFz24H8NDnoE7eGtOpEMeaXZhXtD5vyc8O/tZ9zrN0dUNc6sPgujSDn/49h8tvm+oZ3pkVsUdcmyKq7vZJODpUcxNfm5OG5GzA0Ao+C7ONihDQwS5ZkY9K838iZxAPfURV5Wn9IAF5fWeR+XhQiixNdSbHsoA7D4SlxgfqdFzwbB3HvJJq8SpI+nrYszyYJ8ZONQ08dBzm/zx5zk5ZnCIa8eNpCeydoTzKFjfzdb9iKUsUz/FeR/K3On1I1n0AEV9JTVm7MU1kiflx83aKn4uRRmWMGPJUrZBcpESI/h11R1QlZUM2C2MEberMb9AS5EfSga6gfY9eVQdpA3bG/e40TLxtNDdzqH6Fqt7I5qWz6ii4/NFR0hgQWxLNSgpRzx50XCHYMDXD1uINqvJZYKFPbv9r9Aoe5golYYsJnFC41LIuBkeK4IOsB5uTw+mQV8/cUSm91u/Mwy678WMC7KIjIO68ABJsgpcEDRnYkiFoV74p8p8AJhIMherS8oBQOAZhHcRyFYC5Hr/p3ZvKHoNGJ8oaubFUODCzcMDXCy6AcKHvv5iOHN0GrTMYK81hyuzXiAScvbTT9wxHGzJVeTDH1vzKGLvzvpSkP1WTPoF/12Ai76pJVKYfBX+Xc97L1t0ZJyKKtkVghQ== profor@vanea.net"
 # Sources.list file
 slist=/etc/apt/sources.list
 # SSH port
@@ -128,6 +130,18 @@ if [[ $(cat $slist | grep -w "md") ]]; then
 
 	# Renaming the hostname
 	echo $hstnm > /etc/hostname;
+
+	# Create SSH folder with 700 permissions
+	mkdir -m 700 ~/.ssh;
+
+	# Authorized_keys file needs 644 permissions
+	echo $sshkey > ~/.ssh/authorized_keys && chmod 644 ~/.ssh/authorized_keys;
+
+	# Disabling SSH password authentication
+	# cat /etc/ssh/sshd_config | grep "ChallengeResponseAuthentication" && cat /etc/ssh/sshd_config | grep "PasswordAuthentication" && cat /etc/ssh/sshd_config | grep "UsePAM" && cat /etc/ssh/sshd_config | grep "PermitRootLogin"
+	bckup $sshdc;
+	sed -i -re 's/^(ChallengeResponseAuthentication)([[:space:]]+)yes/\1\2'no'/' -e 's/^(\#)(PasswordAuthentication)([[:space:]]+)(.*)/\2\3\4/' -e 's/^(PasswordAuthentication)([[:space:]]+)yes/\1\2'no'/' $sshdc;
+	service ssh restart
 fi
 
 (echo "IPV6=no" >> /etc/ufw/ufw.conf && ufw limit $sshp/tcp && ufw limit $opvpnp/udp && ufw --force enable) >> $rlog
